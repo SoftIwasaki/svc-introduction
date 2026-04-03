@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SVC — Structured Vibe Coding</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700;900&display=swap');
+
+:root {
+  --bg-primary: #0a0e17;
+  --bg-secondary: #111827;
+  --bg-card: #1a2235;
+  --bg-card-hover: #1f2a40;
+  --accent-cyan: #00e5ff;
+  --accent-green: #39ff14;
+  --accent-orange: #ff6b35;
+  --accent-red: #ff3860;
+  --accent-purple: #a855f7;
+  --accent-yellow: #fbbf24;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-dim: #475569;
+  --border-subtle: rgba(255,255,255,0.06);
+  --glow-cyan: 0 0 30px rgba(0,229,255,0.15);
+  --glow-green: 0 0 30px rgba(57,255,20,0.15);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; background: var(--bg-primary); }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+/* ─── Animated Background Grid ─── */
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: gridShift 20s linear infinite;
+}
+@keyframes gridShift { 0%{transform:translate(0,0)} 100%{transform:translate(60px,60px)} }
+
+/* ─── Navigation ─── */
+nav {
+  position: fixed; top: 0; width: 100%; z-index: 100;
+  background: rgba(10,14,23,0.85); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-subtle); padding: 0 2rem;
+}
+nav .nav-inner {
+  max-width: 1200px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between; height: 56px;
+}
+nav .logo {
+  font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 1.1rem;
+  color: var(--accent-cyan); letter-spacing: 0.05em;
+}
+nav .logo span { color: var(--text-dim); }
+.nav-links { display: flex; gap: 0.25rem; }
+.nav-links a {
+  color: var(--text-secondary); text-decoration: none; font-size: 0.72rem;
+  padding: 0.35rem 0.6rem; border-radius: 6px; transition: all 0.2s; font-weight: 500;
+}
+.nav-links a:hover, .nav-links a.active { color: var(--accent-cyan); background: rgba(0,229,255,0.08); }
+.slide-counter {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--text-dim);
+}
+
+/* ─── Sections ─── */
+.slide {
+  position: relative; z-index: 1; min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 6rem 2rem 4rem;
+}
+.slide-content { max-width: 1100px; width: 100%; }
+
+/* ─── Typography ─── */
+.section-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--accent-cyan); margin-bottom: 0.75rem; opacity: 0.8;
+}
+h1 { font-size: clamp(2.5rem,6vw,4.5rem); font-weight: 900; line-height: 1.1; margin-bottom: 1.5rem; }
+h2 { font-size: clamp(1.8rem,4vw,2.8rem); font-weight: 700; line-height: 1.2; margin-bottom: 1rem; }
+h3 { font-size: 1.3rem; font-weight: 600; margin-bottom: 0.75rem; }
+.subtitle { font-size: 1.15rem; color: var(--text-secondary); line-height: 1.8; max-width: 700px; }
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.gradient-green {
+  background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+
+/* ─── Cards ─── */
+.card-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem; margin-top: 2rem;
+}
+.card {
+  background: var(--bg-card); border: 1px solid var(--border-subtle);
+  border-radius: 12px; padding: 1.75rem; transition: all 0.3s;
+  position: relative; overflow: hidden;
+}
+.card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+  opacity: 0; transition: opacity 0.3s;
+}
+.card:hover { background: var(--bg-card-hover); border-color: rgba(0,229,255,0.15); transform: translateY(-2px); box-shadow: var(--glow-cyan); }
+.card:hover::before { opacity: 1; }
+.card-icon {
+  width: 44px; height: 44px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; font-size: 1.3rem; margin-bottom: 1rem;
+}
+.card h3 { font-size: 1.05rem; margin-bottom: 0.5rem; }
+.card p { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.65; }
+
+/* ─── Code Blocks ─── */
+.code-block {
+  background: #0d1117; border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px; padding: 1.5rem;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; line-height: 1.8;
+  overflow-x: auto; position: relative; margin: 1rem 0;
+}
+.code-block .filename {
+  position: absolute; top: 0; right: 0;
+  background: rgba(0,229,255,0.1); color: var(--accent-cyan);
+  font-size: 0.65rem; padding: 0.25rem 0.75rem; border-radius: 0 10px 0 8px;
+}
+.code-keyword { color: var(--accent-purple); }
+.code-string { color: var(--accent-green); }
+.code-comment { color: var(--text-dim); }
+.code-key { color: var(--accent-cyan); }
+.code-value { color: var(--accent-orange); }
+
+/* ─── Flow ─── */
+.flow {
+  display: flex; align-items: stretch; gap: 0; margin: 2rem 0;
+  flex-wrap: wrap; justify-content: center;
+}
+.flow-node {
+  background: var(--bg-card); border: 1px solid var(--border-subtle);
+  border-radius: 10px; padding: 1.25rem 1.5rem;
+  min-width: 200px; max-width: 260px; flex: 1; text-align: center;
+}
+.flow-node h4 {
+  font-size: 0.85rem; margin-bottom: 0.5rem; color: var(--accent-cyan);
+  font-family: 'JetBrains Mono', monospace;
+}
+.flow-node p { font-size: 0.78rem; color: var(--text-secondary); }
+.flow-arrow {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent-cyan); font-size: 1.3rem; padding: 0 0.5rem; min-width: 40px;
+}
+
+/* ─── Cascade Flow (NEW) ─── */
+.cascade-flow {
+  display: flex; flex-direction: column; gap: 0; margin: 2rem 0;
+  align-items: center;
+}
+.cascade-node {
+  background: var(--bg-card); border: 1px solid var(--border-subtle);
+  border-radius: 12px; padding: 1.25rem 2rem;
+  width: 100%; max-width: 750px; position: relative;
+  display: flex; align-items: center; gap: 1.25rem;
+}
+.cascade-node .cn-icon {
+  width: 48px; height: 48px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; flex-shrink: 0;
+}
+.cascade-node h4 { font-size: 0.9rem; margin-bottom: 0.2rem; }
+.cascade-node p { font-size: 0.78rem; color: var(--text-secondary); }
+.cascade-arrow {
+  display: flex; flex-direction: column; align-items: center;
+  color: var(--text-dim); font-size: 0.7rem; padding: 0.35rem 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+.cascade-arrow .arrow-line {
+  width: 2px; height: 18px;
+  background: linear-gradient(to bottom, var(--accent-cyan), var(--accent-purple));
+}
+.cascade-arrow .arrow-label {
+  font-size: 0.62rem; color: var(--accent-cyan); margin-top: 0.15rem;
+}
+.cascade-context-badge {
+  position: absolute; top: 0.5rem; right: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem; color: var(--accent-green);
+  background: rgba(57,255,20,0.08); border: 1px solid rgba(57,255,20,0.15);
+  padding: 0.1rem 0.5rem; border-radius: 4px;
+}
+
+/* ─── Gate Status ─── */
+.gate-status {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-top: 2rem;
+}
+.gate-card {
+  background: var(--bg-card); border: 1px solid var(--border-subtle);
+  border-radius: 12px; padding: 1.5rem; text-align: center;
+  position: relative; overflow: hidden;
+}
+.gate-card.go { border-color: rgba(57,255,20,0.25); }
+.gate-card.go::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--accent-green); box-shadow: 0 0 20px rgba(57,255,20,0.4);
+}
+.gate-badge {
+  display: inline-block; padding: 0.2rem 0.85rem; border-radius: 20px;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 700;
+  letter-spacing: 0.1em; margin-top: 0.75rem;
+}
+.gate-badge.go {
+  background: rgba(57,255,20,0.12); color: var(--accent-green);
+  border: 1px solid rgba(57,255,20,0.3);
+}
+
+/* ─── Table ─── */
+.svc-table {
+  width: 100%; border-collapse: collapse; margin-top: 1.5rem; font-size: 0.82rem;
+}
+.svc-table th {
+  text-align: left; padding: 0.75rem 1rem;
+  background: rgba(0,229,255,0.06); color: var(--accent-cyan);
+  font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.svc-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); }
+.svc-table tr:hover td { background: rgba(255,255,255,0.02); }
+.badge-h {
+  background: rgba(255,56,96,0.15); color: var(--accent-red);
+  padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600;
+}
+.badge-ai {
+  background: rgba(0,229,255,0.1); color: var(--accent-cyan);
+  padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600;
+}
+
+/* ─── Stats ─── */
+.stats-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1.25rem; margin: 2rem 0;
+}
+.stat-card {
+  background: var(--bg-card); border: 1px solid var(--border-subtle);
+  border-radius: 12px; padding: 1.5rem; text-align: center;
+}
+.stat-number {
+  font-family: 'JetBrains Mono', monospace; font-size: 2.5rem; font-weight: 700;
+  line-height: 1; margin-bottom: 0.35rem;
+}
+.stat-label { font-size: 0.78rem; color: var(--text-secondary); }
+
+/* ─── Timeline ─── */
+.timeline { position: relative; margin: 2rem 0; padding-left: 2.5rem; }
+.timeline::before {
+  content: ''; position: absolute; left: 0.5rem; top: 0; bottom: 0; width: 2px;
+  background: linear-gradient(to bottom, var(--accent-cyan), var(--accent-purple), var(--accent-green));
+}
+.timeline-item { position: relative; margin-bottom: 2rem; }
+.timeline-item::before {
+  content: ''; position: absolute; left: -2.15rem; top: 0.5rem;
+  width: 10px; height: 10px; background: var(--accent-cyan); border-radius: 50%;
+  box-shadow: 0 0 10px rgba(0,229,255,0.5);
+}
+.timeline-item h4 { font-size: 0.9rem; margin-bottom: 0.25rem; }
+.timeline-item p { font-size: 0.82rem; color: var(--text-secondary); }
+.timeline-date {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
+  color: var(--accent-cyan); margin-bottom: 0.15rem;
+}
+
+/* ─── Comparison ─── */
+.comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2rem; }
+.comparison-col {
+  background: var(--bg-card); border-radius: 12px; padding: 1.75rem;
+  border: 1px solid var(--border-subtle);
+}
+.comparison-col.bad { border-top: 3px solid var(--accent-red); }
+.comparison-col.good { border-top: 3px solid var(--accent-green); }
+.comparison-col h3 { font-size: 0.9rem; margin-bottom: 1rem; }
+.comp-step { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 0.75rem; font-size: 0.82rem; color: var(--text-secondary); }
+.comp-step .num {
+  flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.65rem; font-weight: 700; font-family: 'JetBrains Mono', monospace;
+}
+.bad .comp-step .num { background: rgba(255,56,96,0.15); color: var(--accent-red); }
+.good .comp-step .num { background: rgba(57,255,20,0.12); color: var(--accent-green); }
+
+/* ─── Principle Cards ─── */
+.principle-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem; margin-top: 2rem;
+}
+.principle {
+  background: var(--bg-card); border: 1px solid var(--border-subtle);
+  border-radius: 10px; padding: 1.25rem; display: flex; gap: 1rem; align-items: flex-start;
+}
+.principle-num {
+  font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; font-weight: 700;
+  color: var(--accent-cyan); opacity: 0.5; line-height: 1; flex-shrink: 0;
+}
+.principle h4 { font-size: 0.88rem; margin-bottom: 0.25rem; }
+.principle p { font-size: 0.78rem; color: var(--text-secondary); }
+
+/* ─── Tree ─── */
+.file-tree {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; line-height: 2;
+  color: var(--text-secondary);
+}
+.file-tree .dir { color: var(--accent-cyan); }
+.file-tree .highlight { color: var(--accent-green); font-weight: 500; }
+.file-tree .comment { color: var(--text-dim); font-size: 0.7rem; }
+
+/* ─── Architecture Diagram ─── */
+.arch-diagram {
+  background: var(--bg-card); border: 1px solid var(--border-subtle);
+  border-radius: 12px; padding: 2rem; margin: 2rem 0;
+}
+.arch-row { display: flex; justify-content: center; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.arch-box {
+  background: rgba(0,229,255,0.06); border: 1px solid rgba(0,229,255,0.15);
+  border-radius: 8px; padding: 0.75rem 1.25rem; font-size: 0.78rem; text-align: center; min-width: 150px;
+}
+.arch-box.orchestrator {
+  background: rgba(168,85,247,0.08); border-color: rgba(168,85,247,0.25); min-width: 400px;
+}
+.arch-box h4 { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; margin-bottom: 0.25rem; }
+.arch-box p { font-size: 0.72rem; color: var(--text-secondary); }
+.arch-connector { text-align: center; color: var(--text-dim); font-size: 1.2rem; margin: 0.5rem 0; }
+
+/* ─── Animations ─── */
+.fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
+.fade-in.visible { opacity: 1; transform: translateY(0); }
+
+/* ─── Tags ─── */
+.tag {
+  display: inline-block; padding: 0.2rem 0.6rem; border-radius: 5px;
+  font-size: 0.7rem; font-family: 'JetBrains Mono', monospace; font-weight: 500;
+}
+.tag-cyan { background: rgba(0,229,255,0.1); color: var(--accent-cyan); }
+.tag-green { background: rgba(57,255,20,0.1); color: var(--accent-green); }
+.tag-orange { background: rgba(255,107,53,0.1); color: var(--accent-orange); }
+.tag-red { background: rgba(255,56,96,0.1); color: var(--accent-red); }
+.tag-purple { background: rgba(168,85,247,0.1); color: var(--accent-purple); }
+.tag-yellow { background: rgba(251,191,36,0.1); color: var(--accent-yellow); }
+
+.real-data-badge {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  background: rgba(57,255,20,0.08); border: 1px solid rgba(57,255,20,0.2);
+  border-radius: 5px; padding: 0.15rem 0.55rem;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; color: var(--accent-green);
+  margin-bottom: 0.5rem;
+}
+.real-data-badge::before {
+  content: ''; width: 5px; height: 5px; background: var(--accent-green);
+  border-radius: 50%; box-shadow: 0 0 6px var(--accent-green);
+}
+
+.divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border-subtle), transparent); margin: 1rem 0; }
+
+.scroll-progress {
+  position: fixed; top: 56px; left: 0; height: 2px;
+  background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+  z-index: 101; transition: width 0.1s;
+}
+
+.kbd-hint {
+  position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 100;
+  background: rgba(10,14,23,0.9); backdrop-filter: blur(10px);
+  border: 1px solid var(--border-subtle); border-radius: 8px;
+  padding: 0.5rem 0.85rem; font-size: 0.7rem; color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+}
+.kbd-hint kbd {
+  background: rgba(255,255,255,0.06); border: 1px solid var(--border-subtle);
+  border-radius: 3px; padding: 0.1rem 0.35rem; font-size: 0.65rem;
+}
+
+/* ─── Highlight Box ─── */
+.highlight-box {
+  padding: 1.5rem; background: var(--bg-card); border-radius: 10px;
+  border: 1px solid var(--border-subtle); margin-top: 1.5rem;
+}
+.highlight-box.accent-left { border-left: 3px solid var(--accent-cyan); }
+.highlight-box.accent-left-red { border-left: 3px solid var(--accent-red); }
+.highlight-box.accent-left-green { border-left: 3px solid var(--accent-green); }
+
+/* ─── Sync Pack Diagram ─── */
+.sync-diagram {
+  display: grid; grid-template-columns: 1fr auto 1fr; gap: 1rem;
+  align-items: center; margin: 2rem 0;
+}
+.sync-box {
+  background: var(--bg-card); border: 1px solid var(--border-subtle);
+  border-radius: 12px; padding: 1.5rem; text-align: center;
+}
+.sync-arrow {
+  display: flex; flex-direction: column; align-items: center; gap: 0.25rem;
+  color: var(--accent-cyan); font-size: 0.7rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .flow { flex-direction: column; align-items: center; }
+  .flow-arrow { transform: rotate(90deg); padding: 0.5rem; }
+  .comparison { grid-template-columns: 1fr; }
+  .gate-status { grid-template-columns: 1fr; }
+  .sync-diagram { grid-template-columns: 1fr; }
+  .nav-links { display: none; }
+  .cascade-node { flex-direction: column; text-align: center; }
+}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<!-- ─── Nav ─── -->
+<nav>
+  <div class="nav-inner">
+    <div class="logo">SVC<span> // structured-vibe-coding</span></div>
+    <div class="nav-links">
+      <a href="#hero">Intro</a>
+      <a href="#problem">Problem</a>
+      <a href="#compare">vs</a>
+      <a href="#core">Core</a>
+      <a href="#cascade">Cascade</a>
+      <a href="#context">Context</a>
+      <a href="#gates">Gates</a>
+      <a href="#roles">Roles</a>
+      <a href="#human">Human</a>
+      <a href="#syncpack">Sync</a>
+      <a href="#modes">Modes</a>
+      <a href="#realdata">Live</a>
+      <a href="#results">Results</a>
+      <a href="#principles">7</a>
+    </div>
+    <div class="slide-counter" id="slideCounter">01 / 18</div>
+  </div>
+</nav>
+
+<!-- ═══ 01: Hero ═══ -->
+<section class="slide" id="hero">
+  <div class="slide-content fade-in" style="text-align:center;">
+    <div class="section-label">Framework for AI-Augmented Development</div>
+    <h1>
+      <span class="gradient-text">Structured</span><br>
+      <span style="color:var(--text-primary)">Vibe Coding</span>
+    </h1>
+    <p class="subtitle" style="margin:0 auto 2rem;">
+      AIに実装を任せ、人間が設計を握る。<br>
+      憲法・ゲート・役割分離で、AIコーディングを構造的に統制するフレームワーク。
+    </p>
+    <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+      <span class="tag tag-cyan">Claude Code</span>
+      <span class="tag tag-green">Django + React</span>
+      <span class="tag tag-purple">278 Tests Passed</span>
+      <span class="tag tag-orange">mochica_bip PoC</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 02: Problem ═══ -->
+<section class="slide" id="problem">
+  <div class="slide-content fade-in">
+    <div class="section-label">// 01 — The Problem</div>
+    <h2>AI開発で起きていること</h2>
+    <div class="card-grid" style="margin-top:1.5rem;">
+      <div class="card">
+        <div class="card-icon" style="background:rgba(255,56,96,0.1);">💥</div>
+        <h3 style="color:var(--accent-red);">設計崩壊</h3>
+        <p>AIが勝手にファイルを追加し、設計意図が消失する。モジュール境界が曖昧になり、保守不能なコードベースが生まれる。</p>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:rgba(255,107,53,0.1);">🔮</div>
+        <h3 style="color:var(--accent-orange);">暗黙の仕様補完</h3>
+        <p>指示の粒度が曖昧だとAIが仕様を"推測"で埋める。なぜその実装になったか誰もわからない。</p>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:rgba(168,85,247,0.1);">🎰</div>
+        <h3 style="color:var(--accent-purple);">品質のギャンブル</h3>
+        <p>品質はプロンプトの書き方に依存。レビュー基準が属人化し、「動いたからOK」が常態化する。</p>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:rgba(251,191,36,0.1);">🕳️</div>
+        <h3 style="color:var(--accent-yellow);">判断の消失</h3>
+        <p>設計判断の根拠が記録されない。次回も同じ問題が繰り返される。トレーサビリティ・ゼロ。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 03: Comparison ═══ -->
+<section class="slide" id="compare">
+  <div class="slide-content fade-in">
+    <div class="section-label">// 02 — Comparison</div>
+    <h2>Vibe Coding vs <span class="gradient-text">Structured</span> Vibe Coding</h2>
+    <div class="comparison">
+      <div class="comparison-col bad">
+        <h3 style="color:var(--accent-red);">Vibe Coding</h3>
+        <div class="comp-step"><div class="num">1</div><div>人間: 「この機能作って」</div></div>
+        <div class="comp-step"><div class="num">2</div><div>AI: コード生成（設計判断もAI任せ）</div></div>
+        <div class="comp-step"><div class="num">3</div><div>人間: 「動いた、OK」or「違う、やり直し」</div></div>
+        <div class="comp-step"><div class="num">4</div><div>判断の記録なし、設計根拠なし</div></div>
+        <div class="divider"></div>
+        <p style="font-size:0.78rem;color:var(--text-dim);">AIの設計判断が暗黙的。次回も同じ問題が起きる。</p>
+      </div>
+      <div class="comparison-col good">
+        <h3 style="color:var(--accent-green);">SVC</h3>
+        <div class="comp-step"><div class="num">1</div><div>人間: 要件定義 → architecture.md承認</div></div>
+        <div class="comp-step"><div class="num">2</div><div>Orchestrator: バッチ分割 → Reviewer起動</div></div>
+        <div class="comp-step"><div class="num">3</div><div>Reviewer: 設計レビュー → GO / NO GO</div></div>
+        <div class="comp-step"><div class="num">4</div><div>Builder: テスト先行 → 自己レビュー(R-1〜R-8)</div></div>
+        <div class="comp-step"><div class="num">5</div><div>人間: Release Gate最終承認</div></div>
+        <div class="divider"></div>
+        <p style="font-size:0.78rem;color:var(--accent-green);">各ステップに証跡。AIの判断がトレーサブル。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 04: Core 3 ═══ -->
+<section class="slide" id="core">
+  <div class="slide-content fade-in">
+    <div class="section-label">// 03 — Core Design</div>
+    <h2>SVCの<span class="gradient-text">3つの核心</span></h2>
+    <div class="card-grid" style="grid-template-columns: repeat(3, 1fr);">
+      <div class="card" style="border-top:3px solid var(--accent-cyan);">
+        <h3>1. プロジェクト憲法</h3>
+        <p style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--accent-cyan); margin-bottom:0.5rem;">CLAUDE.md</p>
+        <p>AIの役割・禁止事項・承認権限を宣言的に定義。「こうしてください」ではなく「こう定義されている」と書く。</p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--accent-green);">
+        <h3>2. 3つのゲート</h3>
+        <p style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--accent-green); margin-bottom:0.5rem;">Design → Build → Release</p>
+        <p>AIが設計の境界を越えられないよう物理的にブロック。Hooksでファイル書き込み自体を中断。</p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--accent-purple);">
+        <h3>3. 役割分離</h3>
+        <p style="font-family:'JetBrains Mono',monospace; font-size:0.75rem; color:var(--accent-purple); margin-bottom:0.5rem;">Orchestrator / Reviewer / Builder</p>
+        <p>判断する側と作る側を分離。サブエージェントが各ルールに従い自律的に実装・レビュー。</p>
+      </div>
+    </div>
+    <div style="text-align:center; margin-top:2rem; padding:1.25rem; background:var(--bg-card); border-radius:10px; border:1px solid var(--border-subtle);">
+      <p style="font-size:0.9rem; color:var(--text-secondary);">人間は <span style="color:var(--accent-cyan); font-weight:600;">業務判断</span> ・ <span style="color:var(--accent-green); font-weight:600;">上位設計承認</span> ・ <span style="color:var(--accent-purple); font-weight:600;">ゲートGO判定</span> のみに集中する。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 05: CASCADE (NEW) ═══ -->
+<section class="slide" id="cascade">
+  <div class="slide-content fade-in">
+    <div class="section-label">// 04 — Cascade Generation</div>
+    <h2>カスケード生成 — <span class="gradient-text">SVCの心臓部</span></h2>
+    <p class="subtitle" style="margin-bottom:1.5rem;">ロードマップから実装指示が自動的にカスケードする。AIが「何を作るか」を考えるのではなく、構造化されたファイルから「何を作るべきか」が導出される。</p>
+    <div class="cascade-flow">
+      <div class="cascade-node">
+        <div class="cn-icon" style="background:rgba(168,85,247,0.12);">🗺️</div>
+        <div>
+          <h4 style="color:var(--accent-purple);">Roadmap / 要件定義</h4>
+          <p>人間が業務要件と優先度を定義する。SVCの唯一の「白紙から書く」フェーズ。</p>
+        </div>
+      </div>
+      <div class="cascade-arrow"><div class="arrow-line"></div><div class="arrow-label">architecture.md 承認 → Design Gate GO</div></div>
+      <div class="cascade-node">
+        <div class="cn-icon" style="background:rgba(0,229,255,0.12);">📋</div>
+        <div>
+          <h4 style="color:var(--accent-cyan);">Plan File <span style="font-size:0.7rem; opacity:0.6;">（plan.md）</span></h4>
+          <p>ロードマップをバッチ単位に分割。各バッチの目的・スコープ・依存関係を定義。Orchestratorが自動生成。</p>
+        </div>
+        <div class="cascade-context-badge">auto-generated</div>
+      </div>
+      <div class="cascade-arrow"><div class="arrow-line"></div><div class="arrow-label">Reviewer設計レビュー → Human承認 → Build Gate GO</div></div>
+      <div class="cascade-node">
+        <div class="cn-icon" style="background:rgba(57,255,20,0.12);">⚡</div>
+        <div>
+          <h4 style="color:var(--accent-green);">Prompt File <span style="font-size:0.7rem; opacity:0.6;">（prompt.md）</span></h4>
+          <p>プランから自動導出される実装指示。Change Scope Contract・必読ファイル・絶対遵守ルールを含む。Builderはこれだけを読む。</p>
+        </div>
+        <div class="cascade-context-badge">auto-derived</div>
+      </div>
+      <div class="cascade-arrow"><div class="arrow-line"></div><div class="arrow-label">Builder自律実行 → テスト → 自己レビュー → report.md</div></div>
+      <div class="cascade-node">
+        <div class="cn-icon" style="background:rgba(255,107,53,0.12);">🔨</div>
+        <div>
+          <h4 style="color:var(--accent-orange);">Implementation + Tests</h4>
+          <p>prompt.mdのスコープ内で自律的にテスト先行実装。R-1〜R-8の自己レビューを経て report.md を出力。</p>
+        </div>
+        <div class="cascade-context-badge">autonomous</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 06: CONTEXT EFFICIENCY (NEW) ═══ -->
+<section class="slide" id="context">
+  <div class="slide-content fade-in">
+    <div class="section-label">// 05 — Context Efficiency</div>
+    <h2>コンテキスト分割 — <span class="gradient-green">中規模開発を可能にする鍵</span></h2>
+    <p class="subtitle" style="margin-bottom:1.5rem;">AIのコンテキストウィンドウは有限。SVCはカスケード構造でコンテキスト消費を最小化し、中規模開発でも自律実行を持続させる。</p>
+    <div class="comparison" style="grid-template-columns: 1fr 1fr;">
+      <div class="comparison-col bad">
+        <h3 style="color:var(--accent-red);">従来: 全文脈を毎回投入</h3>
+        <div style="font-size:0.82rem; color:var(--text-secondary); line-height:1.8;">
+          <div class="comp-step"><div class="num">!</div><div>プロジェクト全体をAIに説明し直す</div></div>
+          <div class="comp-step"><div class="num">!</div><div>コンテキストが膨張し、指示を忘れる</div></div>
+          <div class="comp-step"><div class="num">!</div><div>中規模以上で破綻する</div></div>
+        </div>
+        <div style="margin-top:1rem; text-align:center;">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:2rem; color:var(--accent-red);">📈 100%</div>
+          <div style="font-size:0.72rem; color:var(--text-dim);">全コンテキストを毎回消費</div>
+        </div>
+      </div>
+      <div class="comparison-col good">
+        <h3 style="color:var(--accent-green);">SVC: バッチ単位でコンテキスト分離</h3>
+        <div style="font-size:0.82rem; color:var(--text-secondary); line-height:1.8;">
+          <div class="comp-step"><div class="num">✓</div><div>Builderは prompt.md + guardrails だけ読む</div></div>
+          <div class="comp-step"><div class="num">✓</div><div>Reviewerは review.md + architecture.md だけ読む</div></div>
+          <div class="comp-step"><div class="num">✓</div><div>各バッチが独立。並列実行も可能</div></div>
+        </div>
+        <div style="margin-top:1rem; text-align:center;">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:2rem; color:var(--accent-green);">📉 ~15%</div>
+          <div style="font-size:0.72rem; color:var(--text-dim);">バッチ単位の必要最小限</div>
+        </div>
+      </div>
+    </div>
+    <div class="highlight-box accent-left" style="margin-top:1.5rem;">
+      <p style="font-size:0.88rem; color:var(--text-secondary);">
+        <strong style="color:var(--accent-cyan);">なぜこれが効くか:</strong>
+        必要な役割が必要なルールだけを読む。CLAUDE.md（憲法）+ guardrails（役割別ルール）+ prompt.md（バッチ指示）の3層構造で、AIが読むべき情報を構造的に制御する。プロジェクト全体を理解し直す必要がないため、中規模開発でもトークンが枯渇せず<strong style="color:var(--accent-green);">自律実行が持続する</strong>。
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 07: HUMAN ROLE (NEW) ═══ -->
+<section class="slide" id="human">
+  <div class="slide-content fade-in">
+    <div class="section-label">// 06 — Human Role</div>
+    <h2>人間は<span class="gradient-text">「選ぶ」だけ</span></h2>
+    <p class="subtitle" style="margin-bottom:1.5rem;">設計・実装・デプロイはAIが実行する。人間の役割は「選択肢からの意思決定」に集約される。</p>
+    <div class="card-grid" style="grid-template-columns: repeat(3, 1fr);">
+      <div class="card" style="border-top:3px solid var(--accent-cyan);">
+        <div class="card-icon" style="background:rgba(0,229,255,0.1);">🧭</div>
+        <h3>設計判断</h3>
+        <p>Orchestratorがトリアージし、選択肢を提示。人間は選ぶだけ。判断はDECISIONS.mdに自動記録される。</p>
+        <div class="code-block" style="font-size:0.68rem; padding:0.75rem; margin-top:0.75rem;">
+<span class="code-comment">## トリアージ結果</span>
+<span class="code-key">選択肢:</span>
+  A: BIPと相乗り <span class="code-string">($0増)</span>
+  B: 独立Plan <span class="code-string">(+$13/月)</span>
+<span class="code-key">推奨:</span> <span class="code-value">A</span>
+        </div>
+      </div>
+      <div class="card" style="border-top:3px solid var(--accent-green);">
+        <div class="card-icon" style="background:rgba(57,255,20,0.1);">✅</div>
+        <h3>ゲート承認</h3>
+        <p>Reviewerのレビュー結果を確認し、GO / NO GO を判定。承認はreview.jsonに証跡として永続化。</p>
+        <div style="text-align:center; margin-top:1rem;">
+          <span class="gate-badge go" style="font-size:0.85rem; padding:0.35rem 1.25rem;">GO</span>
+        </div>
+      </div>
+      <div class="card" style="border-top:3px solid var(--accent-purple);">
+        <div class="card-icon" style="background:rgba(168,85,247,0.1);">🚀</div>
+        <h3>リリース判定</h3>
+        <p>全テスト結果・Reviewer承認・品質指標を確認し、最終GOを出す。ここだけは全レベルでHuman必須。</p>
+        <div style="font-size:0.72rem; color:var(--text-dim); margin-top:0.75rem; text-align:center; font-family:'JetBrains Mono',monospace;">
+          BE 147 + FE 131 = <span style="color:var(--accent-green);">278 PASS</span>
+        </div>
+      </div>
+    </div>
+    <div class="highlight-box accent-left-green" style="margin-top:2rem;">
+      <p style="font-size:0.88rem; color:var(--text-secondary);">
+        <strong style="color:var(--accent-green);">結果:</strong>
+        人間は毎回のコード全行レビューから解放され、<strong style="color:var(--text-primary);">業務上の意思決定</strong>に集中できる。品質基準はguardrailsに明文化済み。設計判断の経緯はDECISIONS.mdで永続化。「前もこの指示したよね」がなくなる。
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 08: SYNC PACK (NEW) ═══ -->
+<section class="slide" id="syncpack">
+  <div class="slide-content fade-in">
+    <div class="section-label">// 07 — External AI Review</div>
+    <h2>/sync-pack — <span class="gradient-text">判断ボトルネックの解消</span></h2>
+    <p class="subtitle" style="margin-bottom:1.5rem;">人間が判断できないとき・迷うとき、プロジェクトの全コンテキストをパッケージ化して外部AIに投げられる。</p>
+    <div class="sync-diagram">
+      <div class="sync-box" style="border-top:3px solid var(--accent-cyan);">
+        <h3 style="font-size:0.9rem; color:var(--accent-cyan); margin-bottom:0.75rem;">Claude Code (SVC)</h3>
+        <p style="font-size:0.78rem; color:var(--text-secondary);">
+          CLAUDE.md + gates + DECISIONS.md + architecture.md + plan + review.json
+        </p>
+        <div style="margin-top:0.75rem;"><span class="tag tag-cyan">/sync-pack</span></div>
+      </div>
+      <div class="sync-arrow">
+        <div style="font-size:1.5rem;">→</div>
+        <div style="font-size:0.65rem; max-width:120px; text-align:center;">1つのMarkdownに自動集約</div>
+      </div>
+      <div class="sync-box" style="border-top:3px solid var(--accent-purple);">
+        <h3 style="font-size:0.9rem; color:var(--accent-purple); margin-bottom:0.75rem;">外部AI (ChatGPT等)</h3>
+        <p style="font-size:0.78rem; color:var(--text-secondary);">
+          異なるモデル・異なる視点で「第三者の目」レビュー
+        </p>
+        <div style="margin-top:0.75rem;"><span class="tag tag-purple">参考水準</span></div>
+      </div>
+    </div>
+    <div class="code-block">
+      <div class="filename">sync_packs/SYNC-20260403-2352.md</div>
+<span class="code-comment"># 自動集約されるコンテキスト（約2000行）</span>
+├── プロジェクト憲法（CLAUDE.md全文）
+├── ゲート状態サマリ（design / build / release）
+├── 意思決定履歴（DECISIONS.md）
+├── プラン・レビュー状況（plan.md + review.json）
+├── 基本設計（architecture.md）
+└── レビュー依頼テンプレート（4観点）
+    </div>
+    <div class="highlight-box accent-left-red">
+      <p style="font-size:0.88rem; color:var(--text-secondary);">
+        <strong style="color:var(--accent-red);">鉄則:</strong>
+        外部AIレビューは<strong style="color:var(--text-primary);">保険であって裁判官ではない</strong>。差戻し権限なし・最終判断には使わない。「AI多数決ごっこ」による思考停止を防ぐため、外部AIは「見落としの発見」に限定する。
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 09: Gates ═══ -->
+<section class="slide" id="gates">
+  <div class="slide-content fade-in">
+    <div class="section-label">// 08 — Gate System</div>
+    <h2>3つの<span class="gradient-green">ゲート</span></h2>
+    <p class="subtitle" style="margin-bottom:1rem;">「AIにお願いする」のではなく、「物理的に書けなくする」仕組み。</p>
+    <div class="real-data-badge">LIVE DATA — mochica_bip/gates/*.json</div>
+    <div class="flow">
+      <div class="flow-node">
+        <h4>Design Gate</h4>
+        <p>architecture.md 承認済み<br>Reviewer GO<br>Human承認</p>
+        <div style="margin-top:0.5rem;"><span class="tag tag-green">gates/design.json</span></div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <h4>Build Gate</h4>
+        <p>Design Gate GO<br>review.json Approved<br>Human承認</p>
+        <div style="margin-top:0.5rem;"><span class="tag tag-green">gates/build.json</span></div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-node">
+        <h4>Release Gate</h4>
+        <p>全テストパス<br>Reviewer承認<br>Human最終確認</p>
+        <div style="margin-top:0.5rem;"><span class="tag tag-green">gates/release.json</span></div>
+      </div>
+    </div>
+    <div class="code-block" style="margin-top:1.5rem;">
+      <div class="filename">scripts/check_gate.py</div>
+<span class="code-comment"># Claude Code Hooks から自動実行</span>
+<span class="code-keyword">status</span> = gate.get(<span class="code-string">"status"</span>, <span class="code-string">"STOP"</span>)
+<span class="code-keyword">if</span> status != <span class="code-string">"GO"</span>:
+    print(<span class="code-string">f"[GATE BLOCK] {gate_name} gate は {status} です。"</span>)
+    sys.exit(<span class="code-value">1</span>)  <span class="code-comment"># → AIのWrite操作が中断される</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 10: Live Gate ═══ -->
+<section class="slide" id="gatelive">
+  <div class="slide-content fade-in">
+    <div class="section-label">// 09 — Live Gate Status</div>
+    <h2>実プロジェクトの<span class="gradient-green">ゲート状態</span></h2>
+    <div class="real-data-badge">LIVE DATA — mochica_bip PoC 最終状態</div>
+    <div class="gate-status">
+      <div class="gate-card go">
+        <h3 style="font-family:'JetBrains Mono',monospace; font-size:0.85rem;">Design Gate</h3>
+        <p style="font-size:0.78rem; color:var(--text-secondary); margin-top:0.5rem;">architecture.md v1.1.0<br>F-01〜F-05 修正完了<br>Reviewer GO + Human承認</p>
+        <div><span class="gate-badge go">GO</span></div>
+        <p style="font-size:0.65rem; color:var(--text-dim); margin-top:0.5rem;">2026-04-01 updated by Human</p>
+      </div>
+      <div class="gate-card go">
+        <h3 style="font-family:'JetBrains Mono',monospace; font-size:0.85rem;">Build Gate</h3>
+        <p style="font-size:0.78rem; color:var(--text-secondary); margin-top:0.5rem;">Design Gate GO<br>Plan Human承認済み<br>batch1〜3 Approved</p>
+        <div><span class="gate-badge go">GO</span></div>
+        <p style="font-size:0.65rem; color:var(--text-dim); margin-top:0.5rem;">2026-04-01 updated by Orchestrator</p>
+      </div>
+      <div class="gate-card go">
+        <h3 style="font-family:'JetBrains Mono',monospace; font-size:0.85rem;">Release Gate</h3>
+        <p style="font-size:0.78rem; color:var(--text-secondary); margin-top:0.5rem;">BE 147 + FE 131 = 278 全パス<br>Critical 2 + Major 3 修正済<br>Human最終承認</p>
+        <div><span class="gate-badge go">GO</span></div>
+        <p style="font-size:0.65rem; color:var(--text-dim); margin-top:0.5rem;">2026-04-03 updated by iwasaki</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 11: Roles ═══ -->
+<section class="slide" id="roles">
+  <div class="slide-content fade-in">
+    <div class="section-label">// 10 — Role Separation</div>
+    <h2>役割分離 — <span class="gradient-text">サブエージェント</span>アーキテクチャ</h2>
+    <div class="arch-diagram">
+      <div class="arch-row">
+        <div class="arch-box orchestrator">
+          <h4 style="color:var(--accent-purple);">Orchestrator</h4>
+          <p>進行管理・トリアージ・ゲート更新 — <strong style="color:var(--accent-red);">設計・実装は一切しない</strong></p>
+        </div>
+      </div>
+      <div class="arch-connector">┃ サブエージェント起動 ┃</div>
+      <div class="arch-row">
+        <div class="arch-box">
+          <h4 style="color:var(--accent-cyan);">Reviewer</h4>
+          <p>設計整合性・セキュリティ<br>非機能審査・R-1〜R-8</p>
+          <div style="margin-top:0.5rem;"><span class="tag tag-cyan">reviewer.md</span></div>
+        </div>
+        <div class="arch-box">
+          <h4 style="color:var(--accent-green);">Builder</h4>
+          <p>テスト先行実装<br>自己レビュー・report出力</p>
+          <div style="margin-top:0.5rem;"><span class="tag tag-green">builder_*.md</span></div>
+        </div>
+        <div class="arch-box">
+          <h4 style="color:var(--accent-orange);">Librarian</h4>
+          <p>SSOT正本管理<br>知識配給・乖離検知</p>
+          <div style="margin-top:0.5rem;"><span class="tag tag-orange">librarian.md</span></div>
+        </div>
+      </div>
+    </div>
+    <p style="font-size:0.85rem; color:var(--text-secondary); text-align:center;">
+      各サブエージェントは<span style="color:var(--accent-cyan);">自分のガードレールファイルだけ</span>を読む — コンテキスト分離の実践。<br>
+      Orchestratorが「設計・実装を一切しない」のが設計上の要点。AI同士の馴れ合いを防止。
+    </p>
+  </div>
+</section>
+
+<!-- ═══ 12: Batch ═══ -->
+<section class="slide" id="batch">
+  <div class="slide-content fade-in">
+    <div class="section-label">// 11 — Batch Structure</div>
+    <h2>バッチ構造と <span class="gradient-text">Change Scope Contract</span></h2>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
+      <div>
+        <div class="real-data-badge">LIVE DATA — PLAN-0001-csv-upload</div>
+        <div class="file-tree" style="background:var(--bg-card); padding:1.5rem; border-radius:10px; border:1px solid var(--border-subtle);">
+<span class="dir">plans/PLAN-0001-CSV取込/</span>
+├── <span class="highlight">plan.md</span>           <span class="comment">← バッチ分割の根拠</span>
+├── <span class="highlight">review.json</span>       <span class="comment">← 全承認記録</span>
+├── <span class="dir">batch1/</span>
+│   ├── prompt.md     <span class="comment">← 実装指示</span>
+│   ├── review.md     <span class="comment">← Reviewerレビュー</span>
+│   └── report.md     <span class="comment">← Builder報告</span>
+├── <span class="dir">batch2/</span>
+└── <span class="dir">batch3/</span>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:0.95rem; margin-bottom:0.75rem;">Change Scope Contract</h3>
+        <p style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:1rem;">prompt.mdに変更スコープを明示。AIが勝手にスコープを広げることを構造的に防ぐ。</p>
+        <div class="code-block">
+<span class="code-keyword">### Change Scope Contract</span>
+
+<span class="code-string">Allowed:</span>
+  models.py, admin.py, tests/test_models.py
+
+<span class="code-value">Conditional:</span>
+  settings.py
+  <span class="code-comment">（理由あれば変更可、report.md記載必須）</span>
+
+<span class="code-key" style="color:var(--accent-red);">Forbidden:</span>
+  urls.py, views.py
+  <span class="code-comment">（batch3の対象。触るならESCALATE）</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 13: Self Review ═══ -->
+<section class="slide" id="review">
+  <div class="slide-content fade-in">
+    <div class="section-label">// 12 — Self Review</div>
+    <h2>Builderの自己レビュー — <span class="gradient-text">R-1〜R-8</span></h2>
+    <table class="svc-table">
+      <thead><tr><th>ID</th><th>観点</th><th>検査内容</th></tr></thead>
+      <tbody>
+        <tr><td style="color:var(--accent-cyan); font-family:'JetBrains Mono',monospace;">R-1</td><td>スコープ逸脱</td><td>prompt.mdの対象外を実装していないか</td></tr>
+        <tr><td style="color:var(--accent-cyan); font-family:'JetBrains Mono',monospace;">R-2</td><td>SSOT整合性</td><td>DECISIONS.md・architecture.mdと矛盾していないか</td></tr>
+        <tr><td style="color:var(--accent-cyan); font-family:'JetBrains Mono',monospace;">R-3</td><td>責務分離</td><td>Model/Service/View/Utilsの責務を混ぜていないか</td></tr>
+        <tr><td style="color:var(--accent-cyan); font-family:'JetBrains Mono',monospace;">R-4</td><td>API契約</td><td>レスポンス形式・ステータスコードが設計と一致するか</td></tr>
+        <tr><td style="color:var(--accent-cyan); font-family:'JetBrains Mono',monospace;">R-5</td><td>データ整合性</td><td>nullable・FK・トランザクション境界は正しいか</td></tr>
+        <tr><td style="color:var(--accent-cyan); font-family:'JetBrains Mono',monospace;">R-6</td><td>異常系</td><td>None・未認証・バリデーションエラーの処理は十分か</td></tr>
+        <tr><td style="color:var(--accent-cyan); font-family:'JetBrains Mono',monospace;">R-7</td><td>後続Batch接続</td><td>次バッチが前提とする構造を壊していないか</td></tr>
+        <tr><td style="color:var(--accent-cyan); font-family:'JetBrains Mono',monospace;">R-8</td><td>テスト妥当性</td><td>正常系・異常系・境界値・権限テストが揃っているか</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══ 14: Modes ═══ -->
+<section class="slide" id="modes">
+  <div class="slide-content fade-in">
+    <div class="section-label">// 13 — Control Modes</div>
+    <h2>リスクに応じた<span class="gradient-text">3つの統制モード</span></h2>
+    <div class="card-grid" style="grid-template-columns: repeat(3, 1fr); margin-top:1.5rem;">
+      <div class="card" style="border-top:3px solid var(--accent-red);">
+        <h3>Full SVC</h3>
+        <p style="font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--accent-red); margin-bottom:0.5rem;">DBスキーマ・API契約・権限制御</p>
+        <p>Design Gate + Build Gate + Reviewer + Human承認 + report.md</p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--accent-yellow);">
+        <h3>Lite SVC</h3>
+        <p style="font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--accent-yellow); margin-bottom:0.5rem;">機能内の局所的な変更</p>
+        <p>prompt.md + 自己レビュー + report.md</p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--accent-green);">
+        <h3>Fast Lane</h3>
+        <p style="font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--accent-green); margin-bottom:0.5rem;">リネーム・コメント修正等</p>
+        <p>差分レビューのみ</p>
+      </div>
+    </div>
+    <div style="margin-top:1.5rem;">
+      <h3 style="font-size:0.95rem; margin-bottom:0.75rem;">判定基準（いずれか1つでもYes → Full SVC）</h3>
+      <table class="svc-table">
+        <thead><tr><th>影響軸</th><th>具体例</th></tr></thead>
+        <tbody>
+          <tr><td>データ影響</td><td>DBスキーマ / migration に影響</td></tr>
+          <tr><td>公開契約影響</td><td>APIリクエスト / レスポンスに影響</td></tr>
+          <tr><td>権限制御影響</td><td>認可 / ロール / 表示制御に影響</td></tr>
+          <tr><td>横断影響</td><td>複数モジュール / shared / infraに波及</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 15: Delegation ═══ -->
+<section class="slide" id="delegation">
+  <div class="slide-content fade-in">
+    <div class="section-label">// 14 — Delegation Matrix</div>
+    <h2>承認委譲マトリクス — <span class="gradient-text">どこまでAIに任せるか</span></h2>
+    <table class="svc-table" style="margin-top:1.5rem;">
+      <thead><tr><th>承認対象</th><th>L1 Strict</th><th>L2 Standard</th><th>L3 Delegated</th></tr></thead>
+      <tbody>
+        <tr><td>Design Gate</td><td><span class="badge-h">Human</span></td><td><span class="badge-h">Human</span></td><td><span class="badge-ai">AI</span> 事後報告</td></tr>
+        <tr><td>Build Gate（Full）</td><td><span class="badge-h">Human</span></td><td><span class="badge-h">Human</span></td><td><span class="badge-ai">AI</span> 事後報告</td></tr>
+        <tr><td>Build Gate（Lite）</td><td><span class="badge-h">Human</span></td><td><span class="badge-ai">AI</span></td><td><span class="badge-ai">AI</span></td></tr>
+        <tr><td style="color:var(--accent-red); font-weight:600;">上位設計への遡及変更</td><td><span class="badge-h">Human</span></td><td><span class="badge-h">Human</span></td><td><span class="badge-h">Human</span></td></tr>
+        <tr><td style="color:var(--accent-red); font-weight:600;">Release Gate</td><td><span class="badge-h">Human</span></td><td><span class="badge-h">Human</span></td><td><span class="badge-h">Human</span></td></tr>
+      </tbody>
+    </table>
+    <div class="highlight-box accent-left-red" style="margin-top:1.5rem;">
+      <p style="font-size:0.85rem; color:var(--text-secondary);">
+        <strong style="color:var(--accent-red);">安全弁:</strong> 上位設計の遡及変更とRelease Gateは<strong style="color:var(--text-primary);">全レベルでHuman必須</strong>。設計の根幹とデプロイ判定は絶対に委譲しない。
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 16: Real Data ═══ -->
+<section class="slide" id="realdata">
+  <div class="slide-content fade-in">
+    <div class="section-label">// 15 — Live Project Data</div>
+    <h2>mochica_bip — <span class="gradient-green">意思決定の証跡</span></h2>
+    <div class="real-data-badge">LIVE DATA — DECISIONS.md</div>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-date">DECISION-0001 | 2026-04-01</div>
+        <h4>プロジェクト基本方針の確定</h4>
+        <p>Django + DRF / React + TypeScript。BIPとは独立リポジトリ。SVC v3.0のPoC。</p>
+        <span class="tag tag-red" style="margin-top:0.25rem;">Architecture Impact</span>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">DECISION-0003 | 2026-04-01</div>
+        <h4>候補者個人情報の表示権限</h4>
+        <p>氏名は人事担当者ロール限定。Entra IDグループで制御。</p>
+        <span class="tag tag-red">Architecture Impact</span>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">DECISION-0006 | 2026-04-03</div>
+        <h4>歩留まり率の定義を修正</h4>
+        <p>移植元のバグを発見・修正。「次ステージ到達 ÷ 当ステージ到達」に統一。</p>
+        <span class="tag tag-orange">Local Override</span>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-date">DECISION-0007 | 2026-04-03</div>
+        <h4>Azure App Service Plan — BIPと相乗り</h4>
+        <p>月額増分$0。CPU 70%超が1週間継続なら再検討。</p>
+        <span class="tag tag-purple">Clarification</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 17: Results ═══ -->
+<section class="slide" id="results">
+  <div class="slide-content fade-in">
+    <div class="section-label">// 16 — Results</div>
+    <h2>mochica_bip — <span class="gradient-green">実績</span></h2>
+    <div class="real-data-badge">LIVE DATA — Release Gate evidence</div>
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-number" style="color:var(--accent-cyan);">5</div>
+        <div class="stat-label">プラン完了</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color:var(--accent-green);">13</div>
+        <div class="stat-label">バッチ実装</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color:var(--accent-purple);">278</div>
+        <div class="stat-label">テスト全パス</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color:var(--accent-orange);">7</div>
+        <div class="stat-label">設計判断記録</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color:var(--accent-green);">0</div>
+        <div class="stat-label">エスカレーション</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" style="color:var(--accent-green);">0</div>
+        <div class="stat-label">設計事故</div>
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-top:1rem;">
+      <div style="background:var(--bg-card); padding:1.5rem; border-radius:10px; border:1px solid var(--border-subtle);">
+        <h3 style="font-size:0.9rem; margin-bottom:0.75rem;">テスト内訳</h3>
+        <div style="display:flex; gap:1rem; align-items:center;">
+          <div style="flex:1;">
+            <div style="display:flex; justify-content:space-between; font-size:0.78rem; margin-bottom:0.35rem;"><span>Backend</span><span style="color:var(--accent-cyan);">147</span></div>
+            <div style="height:6px; background:rgba(255,255,255,0.06); border-radius:3px;"><div style="height:100%; width:52.9%; background:var(--accent-cyan); border-radius:3px;"></div></div>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex; justify-content:space-between; font-size:0.78rem; margin-bottom:0.35rem;"><span>Frontend</span><span style="color:var(--accent-purple);">131</span></div>
+            <div style="height:6px; background:rgba(255,255,255,0.06); border-radius:3px;"><div style="height:100%; width:47.1%; background:var(--accent-purple); border-radius:3px;"></div></div>
+          </div>
+        </div>
+      </div>
+      <div style="background:var(--bg-card); padding:1.5rem; border-radius:10px; border:1px solid var(--border-subtle);">
+        <h3 style="font-size:0.9rem; margin-bottom:0.75rem;">ゲート最終状態</h3>
+        <div style="font-size:0.82rem; color:var(--text-secondary); line-height:2;">
+          <span style="color:var(--accent-green);">●</span> Design Gate — GO (2026-04-01)<br>
+          <span style="color:var(--accent-green);">●</span> Build Gate — GO (2026-04-01)<br>
+          <span style="color:var(--accent-green);">●</span> Release Gate — GO (2026-04-03)
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 18: Principles ═══ -->
+<section class="slide" id="principles">
+  <div class="slide-content fade-in">
+    <div class="section-label">// 17 — Immutable Principles</div>
+    <h2>不変の<span class="gradient-text">7原則</span></h2>
+    <div class="principle-grid">
+      <div class="principle"><div class="principle-num">01</div><div><h4>Plan First</h4><p>実装より計画を優先する</p></div></div>
+      <div class="principle"><div class="principle-num">02</div><div><h4>Human Judgment Only</h4><p>設計変更・ゲートGO・ESCALATEの最終判断は人間のみ</p></div></div>
+      <div class="principle"><div class="principle-num">03</div><div><h4>Gated Orchestration</h4><p>3つのゲートでAIの暴走を機械的に防ぐ</p></div></div>
+      <div class="principle"><div class="principle-num">04</div><div><h4>Traceable Decisions</h4><p>すべての判断を記録する</p></div></div>
+      <div class="principle"><div class="principle-num">05</div><div><h4>Lightweight Operation</h4><p>必要最小限のルール・ドキュメントに絞る</p></div></div>
+      <div class="principle"><div class="principle-num">06</div><div><h4>Test-First + Self-Verification</h4><p>テストを先に書き、自己レビューを行う</p></div></div>
+      <div class="principle"><div class="principle-num">07</div><div><h4>CLAUDE.md = Constitution</h4><p>すべての役割はCLAUDE.mdに従う</p></div></div>
+    </div>
+    <div style="text-align:center; margin-top:2.5rem; padding:1.5rem; background:var(--bg-card); border-radius:10px; border:1px solid var(--border-subtle);">
+      <p style="font-size:1.05rem; font-weight:500; line-height:1.8;">
+        SVCは「AIを信頼しない」フレームワークではない。<br>
+        <span class="gradient-green" style="font-weight:700; font-size:1.15rem;">「AIを信頼できる構造を作る」</span> フレームワークだ。
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 19: End ═══ -->
+<section class="slide" id="end" style="min-height:70vh;">
+  <div class="slide-content fade-in" style="text-align:center;">
+    <div class="section-label">// EOF</div>
+    <h1 style="font-size:clamp(2rem, 5vw, 3.5rem);"><span class="gradient-text">Structured Vibe Coding</span></h1>
+    <p style="font-size:1rem; color:var(--text-secondary); margin-bottom:2rem;">
+      バイブコーディングのスピードと、エンタープライズ品質の統制を両立する。
+    </p>
+    <div style="display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-bottom:1.5rem;">
+      <span class="tag tag-cyan">憲法 CLAUDE.md</span>
+      <span class="tag tag-green">3 Gates</span>
+      <span class="tag tag-purple">Role Separation</span>
+      <span class="tag tag-orange">Cascade Generation</span>
+      <span class="tag tag-yellow">Context Efficiency</span>
+    </div>
+    <p style="font-family:'JetBrains Mono',monospace; font-size:0.7rem; color:var(--text-dim);">
+      SVC v3.0 — Validated on mochica_bip (Django + React, 278 tests, 5 plans, 13 batches)
+    </p>
+  </div>
+</section>
+
+<div class="kbd-hint"><kbd>↑</kbd> <kbd>↓</kbd> scroll &nbsp;|&nbsp; click nav to jump</div>
+
+<script>
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.15 });
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+window.addEventListener('scroll', () => {
+  const h = document.documentElement;
+  document.getElementById('scrollProgress').style.width =
+    (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100 + '%';
+});
+
+const slides = document.querySelectorAll('.slide');
+const counter = document.getElementById('slideCounter');
+const navLinks = document.querySelectorAll('.nav-links a');
+const slideObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const idx = Array.from(slides).indexOf(e.target) + 1;
+      counter.textContent = String(idx).padStart(2,'0') + ' / ' + String(slides.length).padStart(2,'0');
+      navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id));
+    }
+  });
+}, { threshold: 0.4 });
+slides.forEach(s => slideObs.observe(s));
+</script>
+</body>
+</html>
